@@ -1,26 +1,48 @@
 (() => {
+  'use strict';
   const form = document.getElementById('tripForm');
   const steps = [...document.querySelectorAll('.step')];
+  const stepLinks = [...document.querySelectorAll('[data-go-step]')];
   let current = 1;
   const STORAGE_KEY = 'relatorioViagemDraftV1';
+  const MAX_DRAFT_BYTES = 40 * 1024;
 
   const $ = id => document.getElementById(id);
   const formatDateInput = d => {
     const p = n => String(n).padStart(2,'0');
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   };
+
+  // Higienização no cliente: remove controles e caracteres comumente usados em markup.
+  // A validação do backend continua obrigatória para tudo que for enviado à API.
+  const stripControls = value => String(value ?? '')
+    .normalize('NFC')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/[<>`]/g, '');
+  const cleanSingleLine = value => stripControls(value).replace(/[\r\n\t]+/g,' ').replace(/\s{2,}/g,' ');
+  const cleanMultiline = value => stripControls(value).replace(/\r\n?/g,'\n').replace(/\t/g,' ');
+
   if (!$('dataRelatorio').value) $('dataRelatorio').value = formatDateInput(new Date());
 
   function maskCpf(v){
-    const n=v.replace(/\D/g,'').slice(0,11);
+    const n=String(v||'').replace(/\D/g,'').slice(0,11);
     return n.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
   }
   $('cpf').addEventListener('input', e => e.target.value = maskCpf(e.target.value));
-  $('diarias').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+  $('diarias').addEventListener('input', e => { e.target.value = cleanSingleLine(e.target.value).toUpperCase(); });
   $('valor').addEventListener('blur', e => {
-    const raw=e.target.value.trim(); if(!raw) return;
+    const raw=cleanSingleLine(e.target.value).trim(); if(!raw) return;
     const n=Number(raw.replace(/\./g,'').replace(',','.'));
     if(Number.isFinite(n)) e.target.value=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  });
+
+  // Higieniza os demais campos de texto sem interferir em radios, checkboxes e datas.
+  form.querySelectorAll('input[type="text"], input:not([type]), textarea').forEach(el => {
+    if (el.id === 'cpf' || el.id === 'diarias') return;
+    el.addEventListener('blur', () => {
+      el.value = el.tagName === 'TEXTAREA' ? cleanMultiline(el.value) : cleanSingleLine(el.value);
+      saveDraft();
+    });
   });
 
   document.querySelectorAll('input[name="periodoTipo"]').forEach(el => el.addEventListener('change', () => {
@@ -30,12 +52,17 @@
   $('anexoOutros').addEventListener('change', () => { $('outrosWrap').hidden=!$('anexoOutros').checked; saveDraft(); });
 
   [['objetivo','objetivoCount'],['atividades','atividadesCount'],['observacoes','observacoesCount']].forEach(([a,b])=>{
-    const el=$(a); const update=()=>$(b).textContent=el.value.length; el.addEventListener('input',update); update();
+    const el=$(a); const update=()=>$(b).textContent=String(el.value.length); el.addEventListener('input',update); update();
   });
 
   function showStep(n){
-    current=Math.max(1,Math.min(6,n));
+    current=Math.max(1,Math.min(6,Number(n)||1));
     steps.forEach(s=>s.classList.toggle('active',Number(s.dataset.step)===current));
+    stepLinks.forEach(link=>{
+      const active=Number(link.dataset.goStep)===current;
+      link.classList.toggle('active',active);
+      if(active) link.setAttribute('aria-current','step'); else link.removeAttribute('aria-current');
+    });
     $('stepLabel').textContent=`Etapa ${current} de 6`;
     $('progressBar').style.width=`${current/6*100}%`;
     $('prevBtn').style.visibility=current===1?'hidden':'visible';
@@ -44,27 +71,33 @@
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
+  stepLinks.forEach(link=>link.addEventListener('click',()=>showStep(link.dataset.goStep)));
   $('nextBtn').addEventListener('click',()=>showStep(current+1));
   $('prevBtn').addEventListener('click',()=>showStep(current-1));
 
   function serialize(){
     const fd=new FormData(form); const obj={};
     for(const [k,v] of fd.entries()){
-      if(k==='anexos') (obj.anexos ||= []).push(v); else obj[k]=v;
+      const safe = typeof v === 'string' ? (['objetivo','atividades','observacoes'].includes(k) ? cleanMultiline(v) : cleanSingleLine(v)) : v;
+      if(k==='anexos') (obj.anexos ||= []).push(safe); else obj[k]=safe;
     }
     obj.anexos ||= [];
     return obj;
   }
   function restore(obj){
-    Object.entries(obj||{}).forEach(([k,v])=>{
-      if(k==='anexos') return;
+    if(!obj || typeof obj!=='object' || Array.isArray(obj)) return;
+    Object.entries(obj).forEach(([k,v])=>{
+      if(k==='anexos' || typeof k!=='string') return;
       const els=form.querySelectorAll(`[name="${CSS.escape(k)}"]`);
       els.forEach(el=>{
         if(el.type==='radio') el.checked=el.value===v;
-        else if(el.type!=='checkbox') el.value=v??'';
+        else if(el.type!=='checkbox') el.value=typeof v==='string' ? v.slice(0, Number(el.maxLength)>0 ? el.maxLength : 5000) : '';
       });
     });
-    (obj?.anexos||[]).forEach(v=>{ const el=form.querySelector(`input[name="anexos"][value="${CSS.escape(v)}"]`); if(el) el.checked=true; });
+    (Array.isArray(obj.anexos)?obj.anexos:[]).forEach(v=>{
+      if(typeof v!=='string') return;
+      const el=form.querySelector(`input[name="anexos"][value="${CSS.escape(v)}"]`); if(el) el.checked=true;
+    });
     $('periodDates').hidden=form.periodoTipo.value!=='outro'; $('periodHint').hidden=form.periodoTipo.value!=='outro';
     $('outrosWrap').hidden=!$('anexoOutros').checked;
     ['objetivo','atividades','observacoes'].forEach(id=>$(id).dispatchEvent(new Event('input')));
@@ -72,11 +105,18 @@
   let saveTimer;
   function saveDraft(){
     clearTimeout(saveTimer); saveTimer=setTimeout(()=>{
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(serialize())); $('saveState').textContent='Rascunho salvo';
+      try{
+        const json=JSON.stringify(serialize());
+        if(new Blob([json]).size > MAX_DRAFT_BYTES) throw new Error('Rascunho excede o limite local.');
+        localStorage.setItem(STORAGE_KEY,json); $('saveState').textContent='Rascunho salvo';
+      }catch(_){ $('saveState').textContent='Não foi possível salvar'; }
     },250);
   }
   form.addEventListener('input',saveDraft); form.addEventListener('change',saveDraft);
-  try{ const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved) restore(saved); }catch{}
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw && raw.length <= MAX_DRAFT_BYTES){ const saved=JSON.parse(raw); restore(saved); }
+  }catch{}
   if(!$('dataRelatorio').value) $('dataRelatorio').value=formatDateInput(new Date());
 
   $('btnClear').addEventListener('click',()=>{
@@ -84,6 +124,7 @@
     form.reset(); localStorage.removeItem(STORAGE_KEY); $('dataRelatorio').value=formatDateInput(new Date()); restore({}); showStep(1);
   });
 
+  window.RelatorioSecurity = Object.freeze({cleanSingleLine, cleanMultiline});
   window.RelatorioApp={serialize,showStep};
   showStep(1);
 
