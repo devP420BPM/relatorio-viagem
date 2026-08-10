@@ -23,9 +23,10 @@
   function drawWrapped(page,font,text,x,y,maxWidth,maxLines,size=7,leading=8){
     wrapText(text,font,size,maxWidth,maxLines).forEach((line,i)=>page.drawText(line,{x,y:y-i*leading,size,font}));
   }
-  function drawX(page,x,y){
-    page.drawLine({start:{x,y},end:{x:x+6,y:y+6},thickness:1.2});
-    page.drawLine({start:{x,y:y+6},end:{x:x+6,y},thickness:1.2});
+  function drawX(page,x,y,size=5){
+    // X menor e com margem interna para não tocar a borda da caixa.
+    page.drawLine({start:{x,y},end:{x:x+size,y:y+size},thickness:.9});
+    page.drawLine({start:{x,y:y+size},end:{x:x+size,y},thickness:.9});
   }
 
   async function buildPdf(){
@@ -49,37 +50,37 @@
     drawText(page,font,data.diarias,441,627.5,7.1,52);
 
     // Checkboxes viagem - coordenadas dentro das caixas do template
-    if(data.realizada==='sim') drawX(page,63,611.5);
-    if(data.realizada==='nao') drawX(page,63,600.5);
-    if(data.meio==='veiculo') drawX(page,306,611.5);
-    if(data.meio==='passagens') drawX(page,306,600.5);
-    if(data.meio==='outros') drawX(page,306,589.5);
+    if(data.realizada==='sim') drawX(page,64.5,605);
+    if(data.realizada==='nao') drawX(page,64.5,594);
+    if(data.meio==='veiculo') drawX(page,305.5,605);
+    if(data.meio==='passagens') drawX(page,305.5,594);
+    if(data.meio==='outros') drawX(page,305.5,583);
 
     // Período
-    if(data.periodoTipo==='portaria') drawX(page,61,570.5);
+    if(data.periodoTipo==='portaria') drawX(page,62,558.5);
     if(data.periodoTipo==='outro') {
-      drawX(page,61,559.5);
-      drawText(page,font,fmtDate(data.periodoDe),113,558.8,6.8,49);
-      drawText(page,font,fmtDate(data.periodoAte),204,558.8,6.8,50);
+      drawX(page,62,547.5);
+      drawText(page,font,fmtDate(data.periodoDe),113,549.5,6.2,49);
+      drawText(page,font,fmtDate(data.periodoAte),204,549.5,6.2,50);
     }
 
     // Campos longos
-    drawWrapped(page,font,data.objetivo,52,535.5,390,5,7,8.2);
-    drawWrapped(page,font,data.atividades,52,477.5,390,9,7,8.2);
+    drawWrapped(page,font,data.objetivo,52,528,390,4,6.7,7.1);
+    drawWrapped(page,font,data.atividades,52,486.5,390,6,6.7,7.1);
 
     // Anexos
-    if(checked(data.anexos,'bilhetes')) drawX(page,63,387.5);
-    if(checked(data.anexos,'certificado')) drawX(page,63,376.5);
-    if(checked(data.anexos,'deposito')) drawX(page,63,365.5);
+    if(checked(data.anexos,'bilhetes')) drawX(page,65,426.5);
+    if(checked(data.anexos,'certificado')) drawX(page,65,416.5);
+    if(checked(data.anexos,'deposito')) drawX(page,65,405);
     if(checked(data.anexos,'outros')) {
-      drawX(page,63,354.5);
-      drawText(page,font,data.outrosEspecificar,189,354.5,6.7,300);
+      drawX(page,65,394.5);
+      drawText(page,font,data.outrosEspecificar,189,395.5,6.2,300);
     }
-    drawWrapped(page,font,data.observacoes,52,332.5,390,12,7,8.1);
+    drawWrapped(page,font,data.observacoes,52,370,390,9,6.7,7.1);
 
     // Local e data; assinatura permanece em branco
-    drawText(page,font,data.local,52,267.5,7.1,109);
-    drawText(page,font,fmtDate(data.dataRelatorio),194,267.5,7.1,46);
+    drawText(page,font,data.local,58.5,286,7,126);
+    drawText(page,font,fmtDate(data.dataRelatorio),237.5,286,5.2,28);
 
     return await doc.save();
   }

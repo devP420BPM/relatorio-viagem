@@ -16,6 +16,7 @@
     return n.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
   }
   $('cpf').addEventListener('input', e => e.target.value = maskCpf(e.target.value));
+  $('diarias').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
   $('valor').addEventListener('blur', e => {
     const raw=e.target.value.trim(); if(!raw) return;
     const n=Number(raw.replace(/\./g,'').replace(',','.'));
