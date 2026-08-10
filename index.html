@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b4f8a">
+  <meta name="description" content="Relatório de Viagem - preenchimento mobile e geração de PDF.">
+  <title>Relatório de Viagem</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">P4 • 20º BPM</div>
+      <h1>Relatório de Viagem</h1>
+    </div>
+    <button id="btnClear" class="btn btn-ghost" type="button">Limpar</button>
+  </header>
+
+  <main class="shell">
+    <section class="progress-card" aria-label="Progresso do formulário">
+      <div class="progress-text"><span id="stepLabel">Etapa 1 de 6</span><span id="saveState">Rascunho salvo</span></div>
+      <div class="progress"><div id="progressBar" class="progress-bar"></div></div>
+    </section>
+
+    <form id="tripForm" novalidate>
+      <section class="step active" data-step="1">
+        <div class="card">
+          <h2>Identificação</h2>
+          <p class="muted">CPF, Nome e RG podem ser recuperados da base. Posto/Graduação é sempre informado no relatório.</p>
+
+          <label for="cpf">CPF</label>
+          <div class="field-action">
+            <input id="cpf" name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00">
+            <button class="btn btn-secondary" id="lookupCpf" type="button">Consultar</button>
+          </div>
+
+          <label for="nome">Nome</label>
+          <div class="field-action">
+            <input id="nome" name="nome" autocomplete="name" maxlength="100" placeholder="Nome completo">
+            <button class="btn btn-secondary" id="lookupNome" type="button">Buscar</button>
+          </div>
+          <div id="nameResults" class="suggestions" hidden></div>
+
+          <label for="rg">RG</label>
+          <div class="field-action">
+            <input id="rg" name="rg" inputmode="numeric" maxlength="20" placeholder="RG">
+            <button class="btn btn-secondary" id="lookupRg" type="button">Consultar</button>
+          </div>
+
+          <button id="saveIdentity" class="btn btn-outline full" type="button">Salvar Nome, CPF e RG para próxima vez</button>
+          <div id="apiMessage" class="notice" hidden></div>
+
+          <label for="posto">Posto/Graduação</label>
+          <select id="posto" name="posto" required>
+            <option value="">Selecione</option>
+            <option>SD</option><option>CB</option><option>3º SGT</option><option>2º SGT</option><option>1º SGT</option>
+            <option>SUBTEN</option><option>AL OF</option><option>ASP OF</option><option>2º TEN</option><option>1º TEN</option>
+            <option>CAP</option><option>MAJ</option><option>TEN CEL</option><option>CEL</option>
+          </select>
+
+          <label for="opm">OPM</label>
+          <input id="opm" name="opm" maxlength="40" placeholder="Ex.: 20º BPM">
+        </div>
+      </section>
+
+      <section class="step" data-step="2">
+        <div class="card">
+          <h2>Dados da diária</h2>
+          <label for="portaria">Portaria DI / DF nº</label><input id="portaria" name="portaria" maxlength="40">
+          <label for="dataPortaria">Data da Portaria</label><input id="dataPortaria" name="dataPortaria" type="date">
+          <label for="valor">Valor (R$)</label><input id="valor" name="valor" inputmode="decimal" placeholder="0,00">
+          <div class="grid2">
+            <div><label for="origem">Origem</label><input id="origem" name="origem" maxlength="60"></div>
+            <div><label for="destino">Destino</label><input id="destino" name="destino" maxlength="60"></div>
+          </div>
+          <label for="diarias">Nº Diárias</label><input id="diarias" name="diarias" inputmode="decimal" maxlength="10">
+        </div>
+      </section>
+
+      <section class="step" data-step="3">
+        <div class="card">
+          <h2>Viagem e deslocamento</h2>
+          <fieldset><legend>A viagem foi realizada?</legend>
+            <label class="choice"><input type="radio" name="realizada" value="sim"> <span>Sim</span></label>
+            <label class="choice"><input type="radio" name="realizada" value="nao"> <span>Não. Justificar em Outras Observações.</span></label>
+          </fieldset>
+          <fieldset><legend>Qual meio de deslocamento?</legend>
+            <label class="choice"><input type="radio" name="meio" value="veiculo"> <span>Veículo da PMPA</span></label>
+            <label class="choice"><input type="radio" name="meio" value="passagens"> <span>Passagens fornecidas pela PMPA</span></label>
+            <label class="choice"><input type="radio" name="meio" value="outros"> <span>Outros</span></label>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="step" data-step="4">
+        <div class="card">
+          <h2>Período</h2>
+          <fieldset><legend>Em qual período?</legend>
+            <label class="choice"><input type="radio" name="periodoTipo" value="portaria"> <span>Conforme consta na Portaria.</span></label>
+            <label class="choice"><input type="radio" name="periodoTipo" value="outro"> <span>Outro</span></label>
+          </fieldset>
+          <div id="periodDates" class="grid2" hidden>
+            <div><label for="periodoDe">De</label><input id="periodoDe" name="periodoDe" type="date"></div>
+            <div><label for="periodoAte">Até</label><input id="periodoAte" name="periodoAte" type="date"></div>
+          </div>
+          <p id="periodHint" class="notice" hidden>Quando utilizar outro período, justifique em Outras Observações.</p>
+        </div>
+      </section>
+
+      <section class="step" data-step="5">
+        <div class="card">
+          <h2>Relatório</h2>
+          <label for="objetivo">Objetivo da Viagem</label>
+          <textarea id="objetivo" name="objetivo" rows="5" maxlength="700" placeholder="Descreva o objetivo da viagem"></textarea>
+          <div class="counter"><span id="objetivoCount">0</span>/700</div>
+          <label for="atividades">Atividades realizadas</label>
+          <textarea id="atividades" name="atividades" rows="7" maxlength="1100" placeholder="Descreva as atividades realizadas"></textarea>
+          <div class="counter"><span id="atividadesCount">0</span>/1100</div>
+        </div>
+      </section>
+
+      <section class="step" data-step="6">
+        <div class="card">
+          <h2>Anexos e finalização</h2>
+          <fieldset><legend>Anexos do Relatório</legend>
+            <label class="choice"><input type="checkbox" name="anexos" value="bilhetes"> <span>Bilhetes de passagens (aérea, hidroviária ou rodoviária)</span></label>
+            <label class="choice"><input type="checkbox" name="anexos" value="certificado"> <span>Certificado de participação em cursos, seminários, congressos</span></label>
+            <label class="choice"><input type="checkbox" name="anexos" value="deposito"> <span>Comprovante de depósito na Conta Corrente da PMPA</span></label>
+            <label class="choice"><input id="anexoOutros" type="checkbox" name="anexos" value="outros"> <span>Outros</span></label>
+          </fieldset>
+          <div id="outrosWrap" hidden><label for="outrosEspecificar">Especificar</label><input id="outrosEspecificar" name="outrosEspecificar" maxlength="100"></div>
+          <label for="observacoes">Outras Observações</label>
+          <textarea id="observacoes" name="observacoes" rows="6" maxlength="1200"></textarea>
+          <div class="counter"><span id="observacoesCount">0</span>/1200</div>
+          <div class="grid2">
+            <div><label for="local">Local</label><input id="local" name="local" maxlength="60"></div>
+            <div><label for="dataRelatorio">PA Em</label><input id="dataRelatorio" name="dataRelatorio" type="date"></div>
+          </div>
+          <div class="signature-note">O local de assinatura permanecerá em branco no PDF.</div>
+        </div>
+      </section>
+
+      <nav class="wizard-nav">
+        <button id="prevBtn" class="btn btn-ghost" type="button">← Voltar</button>
+        <button id="nextBtn" class="btn btn-primary" type="button">Continuar →</button>
+      </nav>
+
+      <section id="finishActions" class="finish-actions" hidden>
+        <button id="previewPdf" class="btn btn-outline full" type="button">Visualizar PDF</button>
+        <button id="downloadPdf" class="btn btn-primary full" type="button">Gerar e baixar PDF</button>
+      </section>
+    </form>
+  </main>
+
+  <dialog id="previewDialog">
+    <div class="dialog-head"><strong>Pré-visualização</strong><button id="closePreview" class="btn btn-ghost" type="button">Fechar</button></div>
+    <iframe id="pdfFrame" title="Pré-visualização do PDF"></iframe>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/pdf.js"></script>
+</body>
+</html>

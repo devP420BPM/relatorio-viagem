@@ -1,0 +1,11 @@
+{
+  "name": "Relatório de Viagem - P4 20º BPM",
+  "short_name": "Relatório Viagem",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f7",
+  "theme_color": "#0b4f8a",
+  "description": "Preenchimento mobile do Relatório de Viagem e geração do PDF oficial.",
+  "icons": []
+}
