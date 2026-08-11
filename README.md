@@ -24,7 +24,7 @@ Aplicação web mobile-first para preenchimento do Relatório de Viagem e geraç
 ## Configurar a API
 
 1. Crie uma planilha Google Sheets vazia para a base cadastral.
-2. Crie um projeto Google Apps Script e cole `backend/Code.gs`.
+2. Crie um projeto Google Apps Script e cole `backend/Código.gs`.
 3. Em **Project Settings > Script Properties**, crie:
    - `SHEET_ID`: ID da planilha.
    - `SHEET_NAME`: `CADASTROS` (opcional).
@@ -48,3 +48,18 @@ A base automática contém apenas: **CPF, RG e Nome**. Posto/Graduação não é
 - Instalação PWA com convite temporário no Android e instrução equivalente no iOS.
 - Ícones 192/512/maskable e Apple Touch Icon.
 - Cache atualizado para `relatorio-viagem-v1.3.0`.
+
+## V1.4
+
+- Remove os botões manuais **Consultar/Buscar** da identificação.
+- CPF com 11 dígitos dispara consulta automática e, se localizado, preenche Nome e RG.
+- RG dispara consulta automática após pausa na digitação e, se localizado, preenche CPF e Nome.
+- Nome dispara busca automática após 5 caracteres; nome exato preenche CPF/RG e resultados parciais aparecem como sugestões.
+- Mantém o botão **Salvar Nome, CPF e RG para próxima vez** para novos usuários ainda fora da base.
+- Pré-visualização mobile ganha fallback: se o Android não abrir o `blob:` automaticamente, a própria nova aba oferece **Abrir PDF**.
+- Local e Data foram elevados alguns pontos no template para melhor alinhamento.
+- Cache atualizado para `relatorio-viagem-v1.4.0`.
+
+### Base inicial do efetivo
+
+A base de efetivo **não deve ser publicada no repositório público**. Use a planilha privada `BASE_CADASTRAL_RELATORIO_VIAGEM.xlsx`, importe-a no Google Sheets e configure o `SHEET_ID` do Apps Script. A planilha já está no formato esperado pela API: `CPF | RG | NOME | CRIADO_EM`.

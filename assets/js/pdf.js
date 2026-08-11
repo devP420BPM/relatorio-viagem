@@ -102,8 +102,8 @@
     drawWrapped(page,font,data.observacoes,60,370,455,12,6.7,7.3);
 
     // Local e data na faixa amarela; assinatura permanece em branco.
-    drawText(page,font,data.local,64.0,300.0,7,120);
-    drawText(page,font,fmtDate(data.dataRelatorio),241.0,300.0,6.4,49);
+    drawText(page,font,data.local,64.0,305.0,7,120);
+    drawText(page,font,fmtDate(data.dataRelatorio),241.0,305.0,6.4,49);
 
     return await doc.save();
   }
@@ -116,37 +116,69 @@
   }
   let previewUrl='';
   const mobilePdfFlow=()=>window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+
+  function preparePreviewTab(){
+    const tab=window.open('about:blank','_blank');
+    if(!tab) return null;
+    try{
+      tab.document.open();
+      tab.document.write('<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Pré-visualização do PDF</title></head><body style=\"font-family:system-ui;padding:24px;color:#17212b\"><p id=\"status\">Gerando pré-visualização do PDF...</p><p id=\"fallback\" hidden><a id=\"openPdf\" style=\"display:inline-block;padding:14px 18px;border-radius:10px;background:#0b4f8a;color:white;text-decoration:none;font-weight:700\">Abrir PDF</a></p></body></html>');
+      tab.document.close();
+    }catch(_){}
+    return tab;
+  }
+
   $('previewPdf').onclick=async()=>{
     let previewTab=null;
     try{
-      // Em mobile, abrimos a aba imediatamente para não ser bloqueada como popup
-      // enquanto o PDF é gerado de forma assíncrona.
-      if(mobilePdfFlow()){
-        previewTab=window.open('about:blank','_blank');
-        if(previewTab){
-          try{previewTab.opener=null;}catch(_){}
-          previewTab.document.title='Gerando PDF...';
-          previewTab.document.body.innerHTML='<p style="font-family:system-ui;padding:24px">Gerando pré-visualização do PDF...</p>';
-        }
-      }
+      if(mobilePdfFlow()) previewTab=preparePreviewTab();
       const bytes=await buildPdf();
       if(previewUrl)URL.revokeObjectURL(previewUrl);
       previewUrl=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
       if(mobilePdfFlow()){
-        if(previewTab){ previewTab.location.replace(previewUrl); }
-        else {
-          // Se o navegador bloquear a nova aba, navega para o PDF na própria guia.
-          // O usuário pode retornar ao formulário pelo botão Voltar do navegador.
-          window.location.href=previewUrl;
+        if(previewTab){
+          try{
+            // Primeiro tenta abrir diretamente no visualizador nativo do navegador.
+            previewTab.location.href=previewUrl;
+            // Se o Android mantiver about:blank, apresenta um link real para o usuário tocar.
+            setTimeout(()=>{
+              try{
+                if(previewTab && !previewTab.closed && previewTab.location.href==='about:blank'){
+                  const status=previewTab.document.getElementById('status');
+                  const fallback=previewTab.document.getElementById('fallback');
+                  const link=previewTab.document.getElementById('openPdf');
+                  if(status) status.textContent='PDF pronto.';
+                  if(link){link.href=previewUrl;link.target='_self';}
+                  if(fallback) fallback.hidden=false;
+                }
+              }catch(_){ /* Navegou para o visualizador: sucesso. */ }
+            },700);
+          }catch(_){
+            try{
+              const link=previewTab.document.getElementById('openPdf');
+              const fallback=previewTab.document.getElementById('fallback');
+              const status=previewTab.document.getElementById('status');
+              if(status) status.textContent='PDF pronto.';
+              if(link){link.href=previewUrl;link.target='_self';}
+              if(fallback) fallback.hidden=false;
+            }catch(__){}
+          }
+        } else {
+          const a=document.createElement('a');a.href=previewUrl;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
         }
-        setTimeout(()=>{ if(previewUrl){ URL.revokeObjectURL(previewUrl); previewUrl=''; } },300000);
+        setTimeout(()=>{ if(previewUrl){ URL.revokeObjectURL(previewUrl); previewUrl=''; } },600000);
       } else {
         $('pdfFrame').src=previewUrl;
         $('previewDialog').showModal();
       }
     }catch(e){
-      try{ if(previewTab && !previewTab.closed) previewTab.close(); }catch(_){}
-      alert(e.message||'Não foi possível gerar a pré-visualização.');
+      try{
+        if(previewTab && !previewTab.closed){
+          const status=previewTab.document.getElementById('status');
+          if(status) status.textContent=e.message||'Não foi possível gerar a pré-visualização.';
+        }
+      }catch(_){}
+      if(!previewTab) alert(e.message||'Não foi possível gerar a pré-visualização.');
     }
   };
   $('downloadPdf').onclick=async()=>{

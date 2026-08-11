@@ -38,8 +38,10 @@ function doGet(e) {
 
     const rows = dataRows_();
     if (type === 'nome') {
-      const results = rows.filter(r => normalizeName_(r.nome).startsWith(query)).slice(0,10).map(publicRow_);
-      return json_({ok:true,results:results});
+      const exactHit = rows.find(r => normalizeName_(r.nome) === query);
+      if (exactHit) return json_({ok:true,data:publicRow_(exactHit),exact:true});
+      const results = rows.filter(r => normalizeName_(r.nome).startsWith(query)).slice(0,8).map(publicRow_);
+      return json_({ok:true,results:results,exact:false});
     }
     const hit = rows.find(r => (type === 'cpf' ? digits_(r.cpf) : normalizeRg_(r.rg)) === query);
     if (!hit) return json_({ok:false,message:'Cadastro não localizado.'});

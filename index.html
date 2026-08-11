@@ -54,26 +54,17 @@
       <section class="step active" data-step="1">
         <div class="card">
           <h2>Identificação</h2>
-          <p class="muted">CPF, Nome e RG podem ser recuperados da base. Posto/Graduação é sempre informado no relatório.</p>
+          <p class="muted">Digite CPF, Nome ou RG. Quando houver cadastro, os outros dois campos serão preenchidos automaticamente. Posto/Graduação é sempre informado no relatório.</p>
 
           <label for="cpf">CPF</label>
-          <div class="field-action">
-            <input id="cpf" name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00">
-            <button class="btn btn-secondary" id="lookupCpf" type="button">Consultar</button>
-          </div>
+          <input id="cpf" name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00">
 
           <label for="nome">Nome</label>
-          <div class="field-action">
-            <input id="nome" name="nome" autocomplete="name" maxlength="100" placeholder="Nome completo">
-            <button class="btn btn-secondary" id="lookupNome" type="button">Buscar</button>
-          </div>
+          <input id="nome" name="nome" autocomplete="name" maxlength="100" placeholder="Nome completo">
           <div id="nameResults" class="suggestions" hidden></div>
 
           <label for="rg">RG</label>
-          <div class="field-action">
-            <input id="rg" name="rg" inputmode="numeric" maxlength="20" placeholder="RG">
-            <button class="btn btn-secondary" id="lookupRg" type="button">Consultar</button>
-          </div>
+          <input id="rg" name="rg" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="RG">
 
           <button id="saveIdentity" class="btn btn-outline full" type="button">Salvar Nome, CPF e RG para próxima vez</button>
           <div id="apiMessage" class="notice" hidden></div>
