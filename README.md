@@ -39,3 +39,12 @@ A V1 carrega PDF-Lib via CDN. O Service Worker pode armazená-lo após a primeir
 ## Regra permanente da base
 
 A base automática contém apenas: **CPF, RG e Nome**. Posto/Graduação não é persistido para evitar desatualização após promoção.
+
+
+## V1.3
+
+- Pré-visualização de PDF adaptada para mobile (abre em nova aba/visualizador nativo).
+- Ajuste fino de Local e Data no PDF.
+- Instalação PWA com convite temporário no Android e instrução equivalente no iOS.
+- Ícones 192/512/maskable e Apple Touch Icon.
+- Cache atualizado para `relatorio-viagem-v1.3.0`.

@@ -6,12 +6,27 @@
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b4f8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Relatório Viagem">
   <meta name="description" content="Relatório de Viagem - preenchimento mobile e geração de PDF.">
   <title>Relatório de Viagem</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
+  <aside id="installBanner" class="install-banner" hidden role="status" aria-live="polite">
+    <div class="install-icon" aria-hidden="true">📄</div>
+    <div class="install-copy">
+      <strong id="installTitle">Instalar Relatório de Viagem</strong>
+      <span id="installText">Instale para abrir mais rápido, como um aplicativo.</span>
+    </div>
+    <div class="install-actions">
+      <button id="installLater" class="install-later" type="button">Agora não</button>
+      <button id="installAction" class="install-action" type="button">Instalar</button>
+    </div>
+  </aside>
   <header class="topbar">
     <div>
       <div class="eyebrow">P4 • 20º BPM</div>
@@ -174,6 +189,7 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/api.js"></script>
+  <script src="assets/js/install.js"></script>
   <script src="assets/js/pdf.js"></script>
 </body>
 </html>
