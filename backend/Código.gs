@@ -27,7 +27,7 @@ function doGet(e) {
     let query;
     if (type === 'cpf') {
       query = digits_(rawValue);
-      if (query.length !== 11) return json_({ok:false,message:'CPF inválido.'});
+      if (!isValidCpf_(query)) return json_({ok:false,message:'CPF inválido.'});
     } else if (type === 'rg') {
       query = normalizeRg_(rawValue);
       if (query.length < 3) return json_({ok:false,message:'RG inválido.'});
@@ -38,8 +38,9 @@ function doGet(e) {
 
     const rows = dataRows_();
     if (type === 'nome') {
-      const exactHit = rows.find(r => normalizeName_(r.nome) === query);
-      if (exactHit) return json_({ok:true,data:publicRow_(exactHit),exact:true});
+      const exactHits = rows.filter(r => normalizeName_(r.nome) === query);
+      if (exactHits.length === 1) return json_({ok:true,data:publicRow_(exactHits[0]),exact:true});
+      if (exactHits.length > 1) return json_({ok:true,results:exactHits.slice(0,8).map(publicRow_),exact:false});
       const results = rows.filter(r => normalizeName_(r.nome).startsWith(query)).slice(0,8).map(publicRow_);
       return json_({ok:true,results:results,exact:false});
     }
@@ -76,8 +77,10 @@ function doPost(e) {
     }
 
     const sh = sheet_();
-    // CPF/RG são normalizados para caracteres não executáveis; nome aceita somente letras e separadores usuais.
-    sh.appendRow([cpf, rg, nome, new Date()]);
+    // Força CPF e RG como texto para preservar zeros à esquerda no Google Sheets.
+    const targetRow = sh.getLastRow() + 1;
+    sh.getRange(targetRow,1,1,3).setNumberFormat('@');
+    sh.getRange(targetRow,1,1,4).setValues([[cpf, rg, nome, new Date()]]);
     return json_({ok:true,message:'Cadastro salvo com sucesso.',data:{cpf:cpf,rg:rg,nome:nome}});
   } catch (err) {
     console.error(err);
