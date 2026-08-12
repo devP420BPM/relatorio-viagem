@@ -68,6 +68,7 @@
     $('prevBtn').style.visibility=current===1?'hidden':'visible';
     $('nextBtn').hidden=current===6;
     $('finishActions').hidden=current!==6;
+    if(current===6 && !$('local').value.trim() && $('origem').value.trim()){ $('local').value=normalizeLocation($('origem').value); saveDraft(); }
     window.scrollTo({top:0,behavior:'smooth'});
   }
 
@@ -123,6 +124,44 @@
     if(!confirm('Limpar todos os campos deste relatório?')) return;
     form.reset(); localStorage.removeItem(STORAGE_KEY); $('dataRelatorio').value=formatDateInput(new Date()); restore({}); showStep(1);
   });
+
+
+
+  // Facilidades para Origem, Destino e Local: histórico local, inversão e reaproveitamento da origem.
+  const LOCATION_HISTORY_KEY='relatorioViagemLocaisV1';
+  const locationIds=['origem','destino','local'];
+  function normalizeLocation(value){ return cleanSingleLine(value).trim().replace(/\s+/g,' ').toUpperCase().slice(0,60); }
+  function getLocationHistory(){
+    try{
+      const list=JSON.parse(localStorage.getItem(LOCATION_HISTORY_KEY)||'[]');
+      return Array.isArray(list)?list.filter(v=>typeof v==='string'&&v.trim()).slice(0,12):[];
+    }catch(_){ return []; }
+  }
+  function renderLocationSuggestions(){
+    const dl=$('locationSuggestions'); if(!dl) return;
+    dl.replaceChildren(...getLocationHistory().map(v=>{const o=document.createElement('option');o.value=v;return o;}));
+  }
+  function rememberLocation(value){
+    const v=normalizeLocation(value); if(!v) return;
+    const next=[v,...getLocationHistory().filter(x=>x!==v)].slice(0,12);
+    try{localStorage.setItem(LOCATION_HISTORY_KEY,JSON.stringify(next));}catch(_){}
+    renderLocationSuggestions();
+  }
+  locationIds.forEach(id=>{
+    const el=$(id); if(!el) return;
+    el.addEventListener('blur',()=>{el.value=normalizeLocation(el.value);rememberLocation(el.value);saveDraft();});
+  });
+  renderLocationSuggestions();
+  $('swapLocations')?.addEventListener('click',()=>{
+    const origem=$('origem'),destino=$('destino');
+    [origem.value,destino.value]=[destino.value,origem.value];
+    rememberLocation(origem.value);rememberLocation(destino.value);saveDraft();
+  });
+
+  // Ajuda rápida do PAE, sem sair do aplicativo.
+  $('openPaeHelp')?.addEventListener('click',()=>$('paeHelpDialog')?.showModal());
+  $('closePaeHelp')?.addEventListener('click',()=>$('paeHelpDialog')?.close());
+  $('paeHelpDialog')?.addEventListener('click',e=>{if(e.target===$('paeHelpDialog')) $('paeHelpDialog').close();});
 
   window.RelatorioSecurity = Object.freeze({cleanSingleLine, cleanMultiline});
   window.RelatorioApp={serialize,showStep};

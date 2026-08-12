@@ -88,9 +88,11 @@
           <label for="dataPortaria">Data da Portaria</label><input id="dataPortaria" name="dataPortaria" type="date">
           <label for="valor">Valor (R$)</label><input id="valor" name="valor" inputmode="decimal" placeholder="0,00">
           <div class="grid2">
-            <div><label for="origem">Origem</label><input id="origem" name="origem" maxlength="60"></div>
-            <div><label for="destino">Destino</label><input id="destino" name="destino" maxlength="60"></div>
+            <div><label for="origem">Origem</label><input id="origem" name="origem" maxlength="60" list="locationSuggestions" autocomplete="off"></div>
+            <div><label for="destino">Destino</label><input id="destino" name="destino" maxlength="60" list="locationSuggestions" autocomplete="off"></div>
           </div>
+          <button id="swapLocations" class="location-swap" type="button" title="Inverter origem e destino">↔ Inverter origem e destino</button>
+          <datalist id="locationSuggestions"></datalist>
           <label for="diarias">Nº Diárias</label><input id="diarias" name="diarias" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" maxlength="20" placeholder="Ex.: 3A, 3P">
         </div>
       </section>
@@ -151,7 +153,7 @@
           <textarea id="observacoes" name="observacoes" rows="6" maxlength="1200"></textarea>
           <div class="counter"><span id="observacoesCount">0</span>/1200</div>
           <div class="grid2">
-            <div><label for="local">Local</label><input id="local" name="local" maxlength="60"></div>
+            <div><label for="local">Local</label><input id="local" name="local" maxlength="60" list="locationSuggestions" autocomplete="off"></div>
             <div><label for="dataRelatorio">PA Em</label><input id="dataRelatorio" name="dataRelatorio" type="date"></div>
           </div>
           <div class="signature-note">O local de assinatura permanecerá em branco no PDF.</div>
@@ -169,6 +171,29 @@
       </section>
     </form>
   </main>
+
+  <footer class="app-footer">
+    <strong>App desenvolvido por P4/20º BATALHÃO DA POLÍCIA MILITAR DO PARÁ</strong>
+    <button id="openPaeHelp" class="footer-help" type="button">❓ Dúvidas: como inserir o relatório em PDF no PAE?</button>
+  </footer>
+
+  <dialog id="paeHelpDialog" class="help-dialog" aria-labelledby="paeHelpTitle">
+    <div class="dialog-head">
+      <strong id="paeHelpTitle">Como inserir e assinar o Relatório de Viagem no PAE</strong>
+      <button id="closePaeHelp" class="btn btn-ghost" type="button">Fechar</button>
+    </div>
+    <div class="help-content">
+      <p class="help-intro">Primeiro, gere e baixe o Relatório de Viagem em PDF neste aplicativo. Depois, no PAE, siga somente os passos abaixo.</p>
+      <ol class="help-steps">
+        <li><strong>Localize o protocolo recebido.</strong><span>Na Caixa de Entrada do PAE, abra <b>Filtros</b> e informe o número do protocolo no campo <b>Números de protocolo</b> (ex.: E-2026/2959969).</span></li>
+        <li><strong>Abra as ações do protocolo.</strong><span>No protocolo localizado, clique no menu de <b>três pontos (⋮)</b>.</span></li>
+        <li><strong>Anexe o relatório.</strong><span>Escolha <b>Anexar Documento ao Protocolo</b> e, em <b>Upload de Anexos</b>, clique em <b>“Clique aqui para selecionar os anexos”</b>. Selecione o PDF salvo pelo aplicativo.</span></li>
+        <li><strong>Configure o anexo.</strong><span>Defina o tipo como <b>Nato Digital</b>. Em <b>Definir Assinantes</b>, use <b>Me adicionar como assinante</b> e depois conclua a criação do anexo em <b>Criar Anexos</b>.</span></li>
+        <li><strong>Assine o PDF.</strong><span>Quando o anexo estiver criado, selecione a opção de assinatura e clique em <b>Assinar</b> para concluir a assinatura do Relatório de Viagem.</span></li>
+      </ol>
+      <div class="help-important"><strong>Importante:</strong> para esta prestação do Relatório de Viagem, após inserir o PDF e assiná-lo, <b>não é necessário Confirmar nem Tramitar o protocolo</b>.</div>
+    </div>
+  </dialog>
 
   <dialog id="previewDialog">
     <div class="dialog-head"><strong>Pré-visualização</strong><button id="closePreview" class="btn btn-ghost" type="button">Fechar</button></div>

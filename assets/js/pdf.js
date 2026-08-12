@@ -110,9 +110,8 @@
 
   function fileName(){
     const d=window.RelatorioApp.serialize();
-    const nome=pdfSafe(d.nome).toUpperCase().replace(/[^A-Z0-9À-Ü]+/g,'_').replace(/^_|_$/g,'').slice(0,45)||'MILITAR';
-    const date=(d.dataRelatorio||new Date().toISOString().slice(0,10)).replaceAll('-','');
-    return `RELATORIO_VIAGEM_${nome}_${date}.pdf`;
+    const nome=pdfSafe(d.nome).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,60)||'MILITAR';
+    return `relatorio_de_viagem-${nome}.pdf`;
   }
   let previewUrl='';
   const mobilePdfFlow=()=>window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
