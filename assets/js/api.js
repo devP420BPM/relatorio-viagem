@@ -98,6 +98,11 @@
     }
   }
 
+  function identityFieldFocused(){
+    const a=document.activeElement;
+    return a===$('cpf') || a===$('rg') || a===$('nome');
+  }
+
   function scheduleAutoSave(delay=900){
     if(programmaticFill) return;
     clearTimeout(saveTimer);
@@ -105,7 +110,13 @@
     if(!readyToSave(data)) return;
     const fingerprint=identityFingerprint(data);
     if(fingerprint===lastSavedFingerprint || fingerprint===savingFingerprint) return;
-    saveTimer=setTimeout(()=>apiSave(identityData()),delay);
+    saveTimer=setTimeout(()=>{
+      // Não grava enquanto CPF/RG/Nome ainda está sendo digitado. Isso evita
+      // cadastrar um RG parcial após uma pausa breve no teclado do celular.
+      if(identityFieldFocused()) return;
+      const current=identityData();
+      if(readyToSave(current)) apiSave(current);
+    },delay);
   }
 
   function fill(d){
@@ -200,6 +211,12 @@
     const nome=safeLine($('nome').value).slice(0,100);
     if(nome.length>=5) scheduleLookup('nome',nome,600); else { $('nameResults').hidden=true; clearMessage(); }
     scheduleAutoSave();
+  });
+
+  // O cadastro em segundo plano é disparado ao concluir um dos campos.
+  // No mobile, tocar no próximo campo/etapa provoca blur e salva o valor completo.
+  ['cpf','rg','nome'].forEach(id=>{
+    $(id).addEventListener('blur',()=>scheduleAutoSave(180));
   });
 
   // Se o rascunho local restaurar Nome/CPF/RG antes deste script carregar,

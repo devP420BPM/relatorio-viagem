@@ -102,8 +102,8 @@
     drawWrapped(page,font,data.observacoes,60,370,455,12,6.7,7.3);
 
     // Local e data na faixa amarela; assinatura permanece em branco.
-    drawText(page,font,data.local,64.0,305.0,7,120);
-    drawText(page,font,fmtDate(data.dataRelatorio),241.0,305.0,6.4,49);
+    drawText(page,font,data.local,64.0,290.5,7,120);
+    drawText(page,font,fmtDate(data.dataRelatorio),241.0,290.5,6.4,49);
 
     return await doc.save();
   }
